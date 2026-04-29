@@ -7,6 +7,8 @@ import com.sun.net.httpserver.HttpExchange;
 
 import enums.HttpMethod;
 
+
+//Responsible for running methods mapped to specific request methods (GET/POST/PUT......)
 public class RequestRouter {
     private final HashMap<HttpMethod, Consumer<HttpExchange>> requestsMap;
     private final HttpExchange exchange;
