@@ -7,14 +7,15 @@ import java.util.function.Consumer;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import enums.HttpMethod;
 import packages.Http.RequestRouter;
 
 public class HelloHandler implements HttpHandler{
-    private final HashMap<String, Consumer<HttpExchange>> methodHandlers = new HashMap<>();
+    private final HashMap<HttpMethod, Consumer<HttpExchange>> methodHandlers = new HashMap<>();
 
     //Add api routes here 
     public HelloHandler(){
-        methodHandlers.put("GET", exchange -> handleGet(exchange));
+        methodHandlers.put(HttpMethod.GET, exchange -> handleGet(exchange));
 
     }
     

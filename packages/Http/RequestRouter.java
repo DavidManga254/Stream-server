@@ -5,11 +5,13 @@ import java.util.function.Consumer;
 
 import com.sun.net.httpserver.HttpExchange;
 
+import enums.HttpMethod;
+
 public class RequestRouter {
-    private final HashMap<String, Consumer<HttpExchange>> requestsMap;
+    private final HashMap<HttpMethod, Consumer<HttpExchange>> requestsMap;
     private final HttpExchange exchange;
     
-    public RequestRouter(HashMap<String, Consumer<HttpExchange>> requestMap, HttpExchange exchange){
+    public RequestRouter(HashMap<HttpMethod, Consumer<HttpExchange>> requestMap, HttpExchange exchange){
         this.requestsMap = requestMap;
         this.exchange = exchange;
 
@@ -20,7 +22,7 @@ public class RequestRouter {
         //exchange.getRequestMethod tells the request method :: GET/POST/PUT/UPDATE etc
         String requestType = this.exchange.getRequestMethod();
         
-        Consumer<HttpExchange> methodToRun = requestsMap.get(requestType);
+        Consumer<HttpExchange> methodToRun = requestsMap.get(HttpMethod.from(requestType));
 
         if(methodToRun != null){
             methodToRun.accept(this.exchange);
