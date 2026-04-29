@@ -15,6 +15,6 @@ public class Routes {
     //Add api Routes here 
 
     public void mapRoutesToServer(){
-        server.createContext("/hello-test/",new HelloHandler());
+        server.createContext("/hello-test",new HelloHandler());
     }
 }
