@@ -3,6 +3,7 @@ package Http.Routes;
 import com.sun.net.httpserver.HttpServer;
 
 import Http.handler.Hello.HelloHandler;
+import Http.handler.Video.VideoHandle;
 
 public class Routes {
 
@@ -16,5 +17,8 @@ public class Routes {
 
     public void mapRoutesToServer(){
         server.createContext("/hello-test",new HelloHandler());
+
+        //video
+        server.createContext("/video/upload", new VideoHandle());
     }
 }
