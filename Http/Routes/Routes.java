@@ -20,5 +20,6 @@ public class Routes {
 
         //video
         server.createContext("/video/upload", new VideoHandle());
+        server.createContext("/video/", new VideoHandle());
     }
 }

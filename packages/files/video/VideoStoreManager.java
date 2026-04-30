@@ -11,15 +11,19 @@ import constants.Paths;
 
 public class VideoStoreManager {
     private final InputStream videoStream;
-    private final String videoName;
+    private final Path destination;
+    private  OutputStream  videoOutputStream; 
 
-    public VideoStoreManager(InputStream videoStream, String videoName){
+    public VideoStoreManager(InputStream videoStream, String videoName, OutputStream videooOutputStream){
         this.videoStream = videoStream;
-        this.videoName = videoName;
+
+        this.destination  = java.nio.file.Paths.get(Paths.VIDEO_STORAGE + "/" + videoName);
+
+        this.videoOutputStream = videooOutputStream;
     }
 
     public void saveFile() throws IOException {
-        Path destination = java.nio.file.Paths.get(Paths.VIDEO_STORAGE + "/" + videoName);
+        
         Files.createDirectories(destination.getParent());
 
         try (OutputStream out = Files.newOutputStream(destination)) {
@@ -29,5 +33,18 @@ public class VideoStoreManager {
                 out.write(buffer, 0, bytesRead);
             }
         }
+    }
+
+    public void readVideo() throws IOException {
+        try(InputStream in = Files.newInputStream(destination)){
+            byte[] buffer = new byte[8192];
+
+            int bytesRead;
+
+            while((bytesRead = in.read(buffer)) != -1){
+                videoOutputStream.write(buffer,0,bytesRead);
+            }
+        }
+
     }
 }

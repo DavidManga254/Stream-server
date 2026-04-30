@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import Http.services.VideoService.VideoService;
 import enums.HttpMethod;
+import packages.Http.ProcessRequest;
 import packages.Http.RequestRouter;
 
 public class VideoHandle implements HttpHandler {
@@ -15,6 +16,7 @@ public class VideoHandle implements HttpHandler {
 
     public VideoHandle(){
         methodHandlers.put(HttpMethod.POST, exchange -> this.postHandler(exchange));
+        methodHandlers.put(HttpMethod.GET, exchange -> this.getHandler(exchange));
     }
     
     @Override
@@ -24,6 +26,14 @@ public class VideoHandle implements HttpHandler {
 
     private void postHandler(HttpExchange exchange){
         new VideoService(exchange).storeVideo();
+    }
+
+    //GET: video/{id}
+    private void getHandler(HttpExchange exchange){
+        String videoId = new ProcessRequest().getPathParameter(exchange, 3);
+
+        new VideoService(exchange).getVideo(videoId);
+
     }
     
 }

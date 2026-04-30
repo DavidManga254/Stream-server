@@ -33,7 +33,7 @@ public class VideoService {
         try {
 
             VideoStoreManager videoStoreManager = new VideoStoreManager(
-                exchange.getRequestBody(), videoName
+                exchange.getRequestBody(), videoName, null
             );
 
             videoStoreManager.saveFile();
@@ -45,6 +45,27 @@ public class VideoService {
             
         } catch (IOException e) {
             System.out.println("error reading video from request");
+
+            e.printStackTrace();
+        }
+    }
+
+    public void getVideo(String VideoName){
+        try {
+            exchange.getResponseHeaders().set("Content-Type", "video/mp4");
+            exchange.sendResponseHeaders(HttpStatus.OK.code, 0);
+
+            VideoStoreManager videoStoreManager = new VideoStoreManager(
+                exchange.getRequestBody(), VideoName + ".mp4", exchange.getResponseBody()
+            );
+
+            videoStoreManager.readVideo();
+
+            exchange.getResponseBody().close();
+        } catch (IOException e) {
+            System.out.println("error writing video to request");
+
+            new ResponseWriter<String>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "error returning video", null);
 
             e.printStackTrace();
         }
