@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.time.LocalDateTime;
 
 import com.sun.net.httpserver.HttpExchange;
 
@@ -33,7 +32,7 @@ public class VideoService {
         try {
 
             VideoStoreManager videoStoreManager = new VideoStoreManager(
-                exchange.getRequestBody(), videoName, null
+                exchange.getRequestBody(), videoName
             );
 
             videoStoreManager.saveFile();
@@ -51,21 +50,18 @@ public class VideoService {
     }
 
     public void getVideo(String VideoName){
+        //get request  range
         try {
-            exchange.getResponseHeaders().set("Content-Type", "video/mp4");
-            exchange.sendResponseHeaders(HttpStatus.OK.code, 0);
-
             VideoStoreManager videoStoreManager = new VideoStoreManager(
-                exchange.getRequestBody(), VideoName + ".mp4", exchange.getResponseBody()
+                exchange.getRequestBody(), VideoName + ".mp4"
             );
 
-            videoStoreManager.readVideo();
+            videoStoreManager.readVideo(exchange);
 
-            exchange.getResponseBody().close();
         } catch (IOException e) {
             System.out.println("error writing video to request");
 
-            new ResponseWriter<String>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "error returning video", null);
+            // new ResponseWriter<String>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "error returning video", null);
 
             e.printStackTrace();
         }

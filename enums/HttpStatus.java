@@ -6,6 +6,7 @@ public enum HttpStatus {
     CREATED(201, "Created"),
     ACCEPTED(202, "Accepted"),
     NO_CONTENT(204, "No Content"),
+    PARTIAL_CONTENT(206, "Partial Content"),
 
     // 3xx Redirection
     MOVED_PERMANENTLY(301, "Moved Permanently"),
