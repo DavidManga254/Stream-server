@@ -16,6 +16,7 @@ dependencies {
 }
 
 jar {
+    archiveFileName = 'stream-server.jar'
     manifest {
         attributes 'Main-Class': 'Main'
     }

@@ -1,0 +1,8 @@
+services:
+  stream-server:
+    build: .
+    ports:
+      - "4221:4221"
+    volumes:
+      - ./storage/videos:/app/storage/videos
+    restart: unless-stopped
