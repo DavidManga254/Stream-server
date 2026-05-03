@@ -3,10 +3,6 @@ plugins {
     id 'application'
 }
 
-toolchains {
-    languageVersion = JavaLanguageVersion.of(21)
-}
-
 application {
     mainClass = 'Main' 
 }
@@ -25,19 +21,5 @@ jar {
     archiveFileName = 'stream-server.jar'
     manifest {
         attributes 'Main-Class': 'Main'
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            // tell Gradle your source files are in the root, not src/main/java
-            srcDirs = ['.']
-            exclude 'build/**'
-            exclude '.gradle/**'
-        }
-        resources {
-            srcDirs = ['resources']
-        }
     }
 }

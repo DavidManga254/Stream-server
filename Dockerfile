@@ -6,6 +6,7 @@ WORKDIR /app
 # copy gradle files first (layer caching - only re-downloads dependencies if these change)
 COPY gradle/ gradle/
 COPY gradlew .
+RUN chmod +x gradlew
 COPY build.gradle .
 
 # download dependencies
