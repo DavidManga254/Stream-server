@@ -4,17 +4,20 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.UUID;
 
 import com.sun.net.httpserver.HttpExchange;
 
 import enums.HttpStatus;
 import packages.Http.ResponseWriter;
 import packages.files.video.VideoStoreManager;
+import workflows.TranscodeWorkflow;
 
 public class VideoService {
     private final HttpExchange exchange;
     final LocalDateTime now;
     private final String videoName;
+    private final String id;
     HashMap<String,String> responseData = new HashMap<>();
 
 
@@ -23,8 +26,9 @@ public class VideoService {
 
         this.now = LocalDateTime.now();
 
-        String timestamp = now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        this.videoName = timestamp + ".mp4";
+        this.id = UUID.randomUUID().toString();
+
+        this.videoName = id + ".mp4";
     }
 
     public void storeVideo(){
@@ -38,6 +42,9 @@ public class VideoService {
             videoStoreManager.saveFile();
 
             responseData.put("name", videoName);
+
+            //store records 
+            TranscodeWorkflow.storeVideoAndJobsRecords(id);
 
             new ResponseWriter<HashMap<String,String>>(exchange,HttpStatus.OK,"video saved successfully",responseData);
 
