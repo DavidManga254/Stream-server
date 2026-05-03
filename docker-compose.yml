@@ -1,6 +1,11 @@
 services:
   stream-server:
     build: .
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      DB_PORT: ${DB_PORT}
     ports:
       - "${APP_PORT}:4221"
     volumes:
@@ -8,7 +13,8 @@ services:
       - ./storage/stream:/app/storage/stream
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy 
 
   db:
     image: mysql:9.7
@@ -22,6 +28,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   mysql_data:
