@@ -11,7 +11,7 @@ services:
       - db
 
   db:
-    image: mysql:8
+    image: mysql:9.7
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}

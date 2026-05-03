@@ -1,0 +1,6 @@
+.gradle
+build
+storage
+.git
+.vscode
+*.md

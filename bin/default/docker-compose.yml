@@ -1,0 +1,27 @@
+services:
+  stream-server:
+    build: .
+    ports:
+      - "${APP_PORT}:4221"
+    volumes:
+      - ./storage/videos:/app/storage/videos
+      - ./storage/stream:/app/storage/stream
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    image: mysql:9.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
