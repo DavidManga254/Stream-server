@@ -33,7 +33,7 @@ public class TranscodeJobEntity {
 
     @Enumerated(EnumType.STRING) 
     @Column(name = "status", nullable = false)
-    private TranscodeJobStatus videoStatus;
+    private TranscodeJobStatus transcodeJobStatus;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -61,19 +61,23 @@ public class TranscodeJobEntity {
 
     public TranscodeJobEntity(){}
 
-    public TranscodeJobEntity(String videoId, VideoResolution resolution, TranscodeJobStatus videoStatus){
+    public TranscodeJobEntity(String videoId, VideoResolution resolution, TranscodeJobStatus transcodeJobStatus){
         this.videoId = videoId;
         this.resolution = resolution;
-        this.videoStatus = videoStatus;
+        this.transcodeJobStatus = transcodeJobStatus;
     }
 
     public record TranscodeJobEntityInfo(
         String videoId, 
         VideoResolution resolution, 
-        TranscodeJobStatus videoStatus
+        TranscodeJobStatus transcodeJobStatus
     ) {}
 
     public TranscodeJobEntityInfo getJobInfo(){
-        return new TranscodeJobEntityInfo(videoId, resolution, videoStatus);
+        return new TranscodeJobEntityInfo(videoId, resolution, transcodeJobStatus);
+    }
+
+    public void setTranscodeJobStatus(TranscodeJobStatus status){
+        this.transcodeJobStatus = status;
     }
 }

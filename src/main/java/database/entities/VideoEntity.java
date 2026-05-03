@@ -47,11 +47,12 @@ public class VideoEntity {
     public VideoEntity(){}
 
 
-    public VideoEntity(String videoId, VideoStatus videoStatus, LocalDateTime createdAt) {
+    public VideoEntity(String videoId, VideoStatus videoStatus) {
         this.videoId = videoId;
         this.videoStatus = videoStatus;
-        this.createdAt = createdAt;
     }
+
+    
 
     public record VideoRecordInfo(
         String videoId,
@@ -62,6 +63,12 @@ public class VideoEntity {
     public VideoRecordInfo getVideoInfo () {
         return new VideoRecordInfo(videoId, videoStatus);
     }
+
+    public void setVideoStatus(VideoStatus status){
+        this.videoStatus = status;
+
+    }
+
 
     
 }
