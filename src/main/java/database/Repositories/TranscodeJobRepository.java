@@ -4,6 +4,7 @@ import java.util.List;
 
 import database.DbConnection;
 import database.entities.TranscodeJobEntity;
+import database.entities.TranscodeJobEntity.TranscodeJobEntityInfo;
 import enums.TranscodeJobStatus;
 import enums.VideoResolution;
 import jakarta.persistence.EntityManager;
@@ -11,16 +12,51 @@ import jakarta.persistence.EntityTransaction;
 
 public class TranscodeJobRepository {
 
-    public static void storeJob(String videoId, VideoResolution resolution) {
+    public static void storeJobs(String videoId, List<VideoResolution> resolutions) {
+
         EntityManager em = DbConnection.getDbConnection();
         EntityTransaction tx = em.getTransaction();
+
         try {
             tx.begin();
-            em.persist(new TranscodeJobEntity(videoId, resolution, TranscodeJobStatus.PENDING));
+
+            for (VideoResolution resolution : resolutions) {
+                em.persist(new TranscodeJobEntity(
+                        videoId,
+                        resolution,
+                        TranscodeJobStatus.PENDING
+                ));
+            }
+
             tx.commit();
+
         } catch (Exception e) {
-            tx.rollback();
+            if (tx.isActive()) {
+                tx.rollback();
+            }
             e.printStackTrace();
+        } finally {
+            em.close();
+        }
+    }
+
+    public static List<TranscodeJobEntityInfo> getBatchPendingJobs(int limit) {
+        EntityManager em = DbConnection.getDbConnection();
+
+        try {
+            return em.createQuery("""
+                    SELECT new database.entities.TranscodeJobEntity$TranscodeJobEntityInfo(
+                        t.videoId,
+                        t.resolution,
+                        t.transcodeJobStatus
+                    )
+                    FROM TranscodeJobEntity t
+                    WHERE t.transcodeJobStatus = :status
+                    """, TranscodeJobEntity.TranscodeJobEntityInfo.class)
+                    .setParameter("status", TranscodeJobStatus.PENDING)
+                    .setMaxResults(limit)
+                    .getResultList();
+
         } finally {
             em.close();
         }
@@ -48,6 +84,23 @@ public class TranscodeJobRepository {
                 "SELECT j FROM TranscodeJobEntity j WHERE j.videoId = :videoId",
                 TranscodeJobEntity.class)
                 .setParameter("videoId", videoId)
+                .getResultList()
+                .stream()
+                .map(TranscodeJobEntity::getJobInfo)
+                .toList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public static List<TranscodeJobEntity.TranscodeJobEntityInfo> getJobsByVideoIdAndStatus(String videoId, TranscodeJobStatus status) {
+        EntityManager em = DbConnection.getDbConnection();
+        try {
+            return em.createQuery(
+                "SELECT j FROM TranscodeJobEntity j WHERE j.videoId = :videoId AND j.status = :status",
+                TranscodeJobEntity.class)
+                .setParameter("videoId", videoId)
+                .setParameter("status", status)
                 .getResultList()
                 .stream()
                 .map(TranscodeJobEntity::getJobInfo)
