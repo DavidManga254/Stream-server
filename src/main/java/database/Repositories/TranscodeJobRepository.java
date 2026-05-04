@@ -57,7 +57,7 @@ public class TranscodeJobRepository {
         }
     }
 
-    public static void updateJobStatus(String videoId, VideoResolution resolution, TranscodeJobStatus status) {
+    public static boolean updateJobStatus(String videoId, VideoResolution resolution, TranscodeJobStatus status) {
         EntityManager em = DbConnection.getDbConnection();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -70,6 +70,54 @@ public class TranscodeJobRepository {
                 .getSingleResult();
             job.setTranscodeJobStatus(status);
             tx.commit();
+            return true;
+        } catch (Exception e) {
+            tx.rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    public static TranscodeJobEntity.TranscodeJobEntityInfo getNextPendingJob() {
+        EntityManager em = DbConnection.getDbConnection();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            List<TranscodeJobEntity> jobs = em.createQuery(
+                "SELECT j FROM TranscodeJobEntity j WHERE j.transcodeJobStatus = :status",
+                TranscodeJobEntity.class)
+                .setParameter("status", TranscodeJobStatus.PENDING)
+                .setMaxResults(1)
+                .getResultList();
+
+            if (jobs.isEmpty()) return null;
+
+            TranscodeJobEntity job = jobs.get(0);
+            job.setTranscodeJobStatus(TranscodeJobStatus.PROCESSING);
+            tx.commit();
+            return job.getJobInfo();
+        } catch (Exception e) {
+            tx.rollback();
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    public static void resetProcessingJobs() {
+        EntityManager em = DbConnection.getDbConnection();
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            em.createQuery(
+                "UPDATE TranscodeJobEntity j SET j.transcodeJobStatus = :pending WHERE j.transcodeJobStatus = :processing")
+                .setParameter("pending", TranscodeJobStatus.PENDING)
+                .setParameter("processing", TranscodeJobStatus.PROCESSING)
+                .executeUpdate();
+            tx.commit();
         } catch (Exception e) {
             tx.rollback();
             e.printStackTrace();
@@ -77,4 +125,5 @@ public class TranscodeJobRepository {
             em.close();
         }
     }
+
 }

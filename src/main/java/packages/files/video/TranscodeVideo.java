@@ -1,37 +1,88 @@
 package packages.files.video;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import constants.Paths;
+import constants.VideoScale;
+import enums.VideoResolution;
 
 public class TranscodeVideo {
     private final String videoId;
-
-    private final String VIDEO_720p;
-    private final String VIDEO_480p;
-    private final String VIDEO_360p;
+    private final VideoResolution resolution;
+    private String outputPath;
+    // private final String VIDEO_480p;
+    // private final String VIDEO_360p;
     
-    public TranscodeVideo(String videoId){
+    public TranscodeVideo(String videoId, VideoResolution resolution){
         this.videoId = videoId;
+        this.resolution = resolution;
 
-        VIDEO_720p = Paths.streamPath720(videoId) + "/" + videoId;
-        VIDEO_480p = Paths.streamPath480(videoId) + "/" + videoId;
-        VIDEO_360p = Paths.streamPath360(videoId) + "/" + videoId;
+        switch(resolution){
+            case RESOLUTION_360:
+                this.outputPath = Paths.streamPath360(videoId);
+                break;
+            
+            case RESOLUTION_480P:
+                this.outputPath = Paths.streamPath480(videoId);
+                break;
+
+            case RESOLUTION_720P:
+                this.outputPath = Paths.streamPath720(videoId);
+                break;
+
+            default:
+                this.outputPath = null;
+        }
     }
 
-    public void transcode(){
-        Path destination720 = java.nio.file.Paths.get(VIDEO_720p);
-        Path destination480 = java.nio.file.Paths.get(VIDEO_480p);
-        Path destination360 = java.nio.file.Paths.get(VIDEO_360p);
+    public void transcode() throws IOException{
+        Path destination = java.nio.file.Paths.get(outputPath);
+        Files.createDirectories(destination);
 
-        // Files.createDirectories(destination720.getParent());
-        // Files.createDirectories(destination480.getParent());
-        // Files.createDirectories(destination360.getParent());
+        String inputFile = Paths.VIDEO_STORAGE + "/" + videoId + ".mp4";
 
+        String scale;
 
-        // ProcessBuilder pb = new ProcessBuilder(null)
+        switch(resolution) {
+            case RESOLUTION_720P:
+                scale = VideoScale.RESOLUTION_720P;
+                break;
+            case RESOLUTION_480P:
+                scale = VideoScale.RESOLUTION_480P;
+                break;
+            case RESOLUTION_360:
+                scale = VideoScale.RESOLUTION_360P;
+                break;
+            default:
+                scale = VideoScale.RESOLUTION_720P;
+        }
 
+        String segmentFilename = outputPath + "/%03d.ts";
+        String playlistFile = outputPath + "/playlist.m3u8";
+
+        ProcessBuilder pb = new ProcessBuilder(
+            "ffmpeg",
+            "-i", inputFile,
+            "-map", "0:v", "-map", "0:a",
+            "-vf", "scale=" + scale,
+            "-c:v", "libx264",
+            "-hls_time", "10",
+            "-hls_playlist_type", "vod",
+            "-hls_segment_filename", segmentFilename,
+            playlistFile
+        );
+
+        pb.inheritIO();
+        Process process = pb.start();
+
+        try {
+            process.waitFor(); 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new IOException("Failed to complete transcoding");
+        }
     }
 }
 
