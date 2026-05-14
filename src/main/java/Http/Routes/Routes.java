@@ -3,6 +3,7 @@ package Http.Routes;
 import com.sun.net.httpserver.HttpServer;
 
 import Http.handler.Hello.HelloHandler;
+import Http.handler.Video.StreamHandle;
 import Http.handler.Video.VideoHandle;
 
 public class Routes {
@@ -21,5 +22,8 @@ public class Routes {
         //video
         server.createContext("/video/upload", new VideoHandle());
         server.createContext("/video/", new VideoHandle());
+
+        //stream
+        server.createContext("/streams/",new StreamHandle());
     }
 }

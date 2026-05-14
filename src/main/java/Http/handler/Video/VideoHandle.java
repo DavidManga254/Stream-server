@@ -35,11 +35,5 @@ public class VideoHandle implements HttpHandler {
         new VideoService(exchange).getMasterPlayList(videoId);
 
     }
-    // private void getHandler(HttpExchange exchange){
-    //     String videoId = new ProcessRequest().getPathParameter(exchange, 3);
-
-    //     new VideoService(exchange).getVideo(videoId);
-
-    // }
     
 }

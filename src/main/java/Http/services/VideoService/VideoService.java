@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.sun.net.httpserver.HttpExchange;
 
 import enums.HttpStatus;
+import enums.VideoResolution;
 import packages.Http.ResponseWriter;
 import packages.files.video.VideoStoreManager;
 import workflows.TranscodeWorkflow;
@@ -57,6 +58,24 @@ public class VideoService {
 
     public void getMasterPlayList(String videoId){
         VideoStoreManager.serveMasterPlaylist(exchange, videoId);
+    }
+
+    public void getQualityPlaylist(String videoId, String quality){
+
+        VideoResolution resolution = switch(quality) {
+            case "360" -> VideoResolution.RESOLUTION_360;
+            case "480" -> VideoResolution.RESOLUTION_480P;
+            case "720" -> VideoResolution.RESOLUTION_720P;
+            default -> null;
+        };
+
+        if(videoId == null || quality == null){
+            new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Invalid id or quality", null);
+        }
+
+
+        VideoStoreManager.serveQualityPlaylist(exchange, videoId, resolution);
+
     }
 
     public void getVideo(String VideoName){

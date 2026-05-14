@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import com.sun.net.httpserver.HttpExchange;
 
 import enums.HttpMethod;
+import enums.HttpStatus;
 
 
 //Responsible for running methods mapped to specific request methods (GET/POST/PUT......)
@@ -30,7 +31,7 @@ public class RequestRouter {
             methodToRun.accept(this.exchange);
         } else {
             try {
-                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+                exchange.sendResponseHeaders(HttpStatus.METHOD_NOT_ALLOWED.code, -1); // Method Not Allowed
                 exchange.close();
             } catch (Exception e) {
                 e.printStackTrace();

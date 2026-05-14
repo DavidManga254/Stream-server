@@ -11,6 +11,7 @@ import com.sun.net.httpserver.HttpExchange;
 
 import constants.Paths;
 import enums.HttpStatus;
+import enums.VideoResolution;
 import packages.Http.AddResponsePartialHeader;
 import packages.Http.ResponseWriter;
 
@@ -41,6 +42,13 @@ public class VideoStoreManager {
         Path masterFilePath = java.nio.file.Paths.get(Paths.getMasterPlaylist(videoId));
 
         streamPlaylistFile(exchange, masterFilePath);
+    }
+
+    public static void serveQualityPlaylist(HttpExchange exchange, String videoId, VideoResolution resolution){
+        Path playListFile = java.nio.file.Paths.get(Paths.getQualityPlaylist(videoId, resolution));
+
+
+        streamPlaylistFile(exchange, playListFile);
     }
 
     public void readVideo(HttpExchange exchange) throws IOException {
@@ -85,7 +93,7 @@ public class VideoStoreManager {
     }
 
     private static void streamPlaylistFile(HttpExchange exchange, Path filePath){
-    
+
         if (!Files.exists(filePath)){
             new ResponseWriter<>(exchange, HttpStatus.NOT_FOUND, "Requested playlist not found", null);
 
@@ -100,6 +108,7 @@ public class VideoStoreManager {
             headers.set("Access-Control-Allow-Origin", "*");
 
             exchange.sendResponseHeaders(HttpStatus.OK.code, fileSize);
+
 
             
         } catch (IOException e) {
