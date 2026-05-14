@@ -97,7 +97,7 @@ public class TranscodeJobRepository {
         EntityManager em = DbConnection.getDbConnection();
         try {
             return em.createQuery(
-                "SELECT j FROM TranscodeJobEntity j WHERE j.videoId = :videoId AND j.status = :status",
+                "SELECT j FROM TranscodeJobEntity j WHERE j.videoId = :videoId AND j.transcodeJobStatus = :status",
                 TranscodeJobEntity.class)
                 .setParameter("videoId", videoId)
                 .setParameter("status", status)
