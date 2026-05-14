@@ -18,4 +18,12 @@ public final class Paths {
     public static String streamPath360(String videoId){
         return STREAM_VIDEO_STORAGE + "/" + videoId + "/360";
     }
+
+    public static String getMasterPlaylist(String videoId){
+        return STREAM_VIDEO_STORAGE + "/" + videoId + "/master.m3u8"; 
+    }
+
+    // public static String getMasterPlaylist(String videoId){
+    //     return STREAM_VIDEO_STORAGE + "/" + videoId + "/master.m3u8"; 
+    // }
 }

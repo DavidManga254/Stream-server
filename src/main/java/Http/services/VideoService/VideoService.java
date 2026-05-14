@@ -55,6 +55,10 @@ public class VideoService {
         }
     }
 
+    public void getMasterPlayList(String videoId){
+        VideoStoreManager.serveMasterPlaylist(exchange, videoId);
+    }
+
     public void getVideo(String VideoName){
         //get request  range
         try {

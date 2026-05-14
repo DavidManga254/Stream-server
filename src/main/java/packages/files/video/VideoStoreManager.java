@@ -6,10 +6,13 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
 import constants.Paths;
+import enums.HttpStatus;
 import packages.Http.AddResponsePartialHeader;
+import packages.Http.ResponseWriter;
 
 public class VideoStoreManager {
     private final InputStream videoStream;
@@ -34,9 +37,13 @@ public class VideoStoreManager {
         }
     }
 
-    public void readVideo(HttpExchange exchange) throws IOException {
-        
+    public static void serveMasterPlaylist(HttpExchange exchange, String videoId){
+        Path masterFilePath = java.nio.file.Paths.get(Paths.getMasterPlaylist(videoId));
 
+        streamPlaylistFile(exchange, masterFilePath);
+    }
+
+    public void readVideo(HttpExchange exchange) throws IOException {
         long fileSize = Files.size(destination);
 
         AddResponsePartialHeader partialHeadermaker = new AddResponsePartialHeader(exchange, fileSize);
@@ -71,9 +78,57 @@ public class VideoStoreManager {
                     return;
                 }
             }
-        }
+        } 
 
         videoOutputStream.close();
 
+    }
+
+    private static void streamPlaylistFile(HttpExchange exchange, Path filePath){
+    
+        if (!Files.exists(filePath)){
+            new ResponseWriter<>(exchange, HttpStatus.NOT_FOUND, "Requested playlist not found", null);
+
+        }
+
+        try {
+            long fileSize = Files.size(filePath);
+
+            Headers headers = exchange.getResponseHeaders();
+            headers.set("Content-Type", "application/vnd.apple.mpegurl");
+            headers.set("Cache-Control", "no-cache");
+            headers.set("Access-Control-Allow-Origin", "*");
+
+            exchange.sendResponseHeaders(HttpStatus.OK.code, fileSize);
+
+            
+        } catch (IOException e) {
+            new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Failed sending response headers", null);
+        }
+
+        
+        try (InputStream in = Files.newInputStream(filePath)){
+            
+            OutputStream fileOutputStream = exchange.getResponseBody();
+
+            byte[] buffer = new byte[8192];
+
+            int bytesRead;
+
+            while((bytesRead = in.read(buffer)) != -1){
+
+                fileOutputStream.write(buffer,0,bytesRead);
+
+            }
+
+            fileOutputStream.close();
+
+        } catch (IOException e){
+            e.printStackTrace();
+
+            new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Error returning file", null);
+        }
+        
+        
     }
 }

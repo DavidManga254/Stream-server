@@ -134,6 +134,7 @@ public class TranscodeWorkflow {
             return resolution;
         }
     }
+    
 
     private static final void upSertMasterPlayList(String videoId){
         List<TranscodeJobEntity.TranscodeJobEntityInfo> completedJobs = TranscodeJobRepository.getJobsByVideoIdAndStatus(videoId,TranscodeJobStatus.COMPLETE);
