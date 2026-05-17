@@ -51,6 +51,12 @@ public class VideoStoreManager {
         streamPlaylistFile(exchange, playListFile);
     }
 
+    public static void serveStreamSegment(HttpExchange exchange, String videoId, VideoResolution resolution, String segment){
+        Path segmentFilePath = java.nio.file.Paths.get(Paths.getSegmentPath(videoId, resolution, segment));
+
+        streamVideoSegment(exchange, segmentFilePath);
+    }
+
     public void readVideo(HttpExchange exchange) throws IOException {
         long fileSize = Files.size(destination);
 
@@ -92,11 +98,48 @@ public class VideoStoreManager {
 
     }
 
+    private static void streamVideoSegment(HttpExchange exchange, Path filePath) {
+        if (!Files.exists(filePath)) {
+            new ResponseWriter<>(exchange, HttpStatus.NOT_FOUND, "Requested stream segment not found", null);
+            return;
+        }
+
+        try {
+            long fileSize = Files.size(filePath);
+
+            Headers headers = exchange.getResponseHeaders();
+            headers.set("Content-Type", "video/mp2t");
+            headers.set("Content-Length", String.valueOf(fileSize));
+            headers.set("Cache-Control", "max-age=3600, public");
+            headers.set("Access-Control-Allow-Origin", "*");
+            headers.set("Accept-Ranges", "bytes");
+
+            exchange.sendResponseHeaders(HttpStatus.OK.code, fileSize);
+
+            try (InputStream in = Files.newInputStream(filePath);
+                OutputStream out = exchange.getResponseBody()) {
+
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Error streaming segment", null);
+        }
+    }
+
+
     private static void streamPlaylistFile(HttpExchange exchange, Path filePath){
 
         if (!Files.exists(filePath)){
             new ResponseWriter<>(exchange, HttpStatus.NOT_FOUND, "Requested playlist not found", null);
 
+            return;
         }
 
         try {

@@ -35,4 +35,15 @@ public final class Paths {
 
         return STREAM_VIDEO_STORAGE + "/" + videoId + "/" + quality + "/playlist.m3u8"; 
     }
+
+    public static String getSegmentPath(String videoId,VideoResolution resolution, String segment){
+        String quality = switch(resolution){
+            case RESOLUTION_360 -> "360";
+            case RESOLUTION_480P -> "480";
+            case RESOLUTION_720P -> "720";
+            default -> null;
+        };
+
+        return STREAM_VIDEO_STORAGE + "/" + videoId + "/" + quality + "/" + segment; 
+    }
 }

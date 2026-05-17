@@ -62,12 +62,7 @@ public class VideoService {
 
     public void getQualityPlaylist(String videoId, String quality){
 
-        VideoResolution resolution = switch(quality) {
-            case "360" -> VideoResolution.RESOLUTION_360;
-            case "480" -> VideoResolution.RESOLUTION_480P;
-            case "720" -> VideoResolution.RESOLUTION_720P;
-            default -> null;
-        };
+        VideoResolution resolution = this.mapVideoResolution(quality);
 
         if(videoId == null || quality == null){
             new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Invalid id or quality", null);
@@ -75,6 +70,17 @@ public class VideoService {
 
 
         VideoStoreManager.serveQualityPlaylist(exchange, videoId, resolution);
+
+    }
+
+    public void getSegmentStream(String videoId, String quality, String segment){
+        VideoResolution resolution = this.mapVideoResolution(quality);
+
+        if(videoId == null || quality == null){
+            new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Invalid id or quality", null);
+        }
+
+        VideoStoreManager.serveStreamSegment(exchange, videoId, resolution, segment);
 
     }
 
@@ -94,5 +100,16 @@ public class VideoService {
 
             e.printStackTrace();
         }
+    }
+
+    private VideoResolution mapVideoResolution(String resolution){
+        return  switch(resolution) {
+            case "360" -> VideoResolution.RESOLUTION_360;
+            case "480" -> VideoResolution.RESOLUTION_480P;
+            case "720" -> VideoResolution.RESOLUTION_720P;
+            default -> null;
+        };
+
+
     }
 }

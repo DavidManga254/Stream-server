@@ -31,19 +31,4 @@ public class StreamHandle implements HttpHandler {
 
         new VideoService(exchange).getQualityPlaylist(id, quality);
     }
-
-    // GET: /streams/{id}/{quality}/{segment}
-    // private void getSegmentHandler(HttpExchange exchange) {
-    //     String id = new ProcessRequest().getPathParameter(exchange, 2);
-    //     String quality = new ProcessRequest().getPathParameter(exchange, 3);
-    //     String segment = new ProcessRequest().getPathParameter(exchange, 4);
-
-    //     new StreamService(exchange).getSegment(id, quality, segment);
-    // }
-    // private void getHandler(HttpExchange exchange){
-    //     String videoId = new ProcessRequest().getPathParameter(exchange, 3);
-
-    //     new VideoService(exchange).getVideo(videoId);
-
-    // }
 }
