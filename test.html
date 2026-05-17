@@ -1,6 +1,46 @@
-<video controls width="600">
-    <source src="http://localhost:4221/video/20260430230725" type="video/mp4">
-</video>
-<video controls width="600">
-    <source src="http://localhost:4221/video/20260430181240" type="video/mp4">
-</video>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stream Player</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+    <style>
+        body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+        video { width: 80%; max-width: 900px; }
+        input { margin: 16px 0; padding: 8px; width: 60%; border-radius: 6px; border: none; }
+        button { padding: 8px 20px; border-radius: 6px; border: none; background: #e50914; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <input id="videoId" type="text" placeholder="Enter video ID e.g. 54834519-6609-425b-840b-103a47b8cb78" />
+    <button onclick="loadVideo()">Play</button>
+    <video id="player" controls></video>
+
+    <script>
+        const BASE_URL = "http://localhost:4221";
+
+        function loadVideo() {
+            const videoId = document.getElementById("videoId").value.trim();
+            const masterUrl = `${BASE_URL}/video/${videoId}`;
+
+            const video = document.getElementById("player");
+
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(masterUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                hls.on(Hls.Events.ERROR, (event, data) => console.error("HLS error", data));
+            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                // Safari native HLS support
+                video.src = masterUrl;
+                video.play();
+            } else {
+                alert("HLS not supported in this browser");
+            }
+        }
+    </script>
+
+</body>
+</html>
