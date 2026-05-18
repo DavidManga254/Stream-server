@@ -5,35 +5,249 @@
     <title>Stream Player</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
     <style>
-        body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
-        video { width: 80%; max-width: 900px; }
-        input { margin: 16px 0; padding: 8px; width: 60%; border-radius: 6px; border: none; }
-        button { padding: 8px 20px; border-radius: 6px; border: none; background: #e50914; color: white; cursor: pointer; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            color: #fff;
+            padding: 2rem;
+            gap: 1rem;
+        }
+
+        h2 { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+        .card {
+            width: 100%;
+            max-width: 900px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+
+        /* drop zone */
+        .drop-zone {
+            border: 2px dashed #333;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .drop-zone:hover, .drop-zone.over { border-color: #e50914; background: #1a0000; }
+        .drop-zone p { color: #888; font-size: 14px; margin-top: 6px; }
+
+        .file-name { font-size: 13px; color: #666; margin-top: 8px; min-height: 18px; }
+
+        /* inputs */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        input[type="text"]:focus { border-color: #e50914; }
+
+        /* buttons */
+        .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+        button {
+            padding: 9px 20px;
+            border-radius: 6px;
+            border: none;
+            background: #e50914;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.15s;
+        }
+        button:hover { opacity: 0.85; }
+        button:disabled { opacity: 0.35; cursor: not-allowed; }
+        button.secondary { background: #222; border: 1px solid #333; }
+        button.secondary:hover { background: #2a2a2a; opacity: 1; }
+
+        /* progress */
+        .progress-bar { height: 4px; background: #222; border-radius: 99px; overflow: hidden; margin-top: 12px; display: none; }
+        .progress-fill { height: 100%; background: #e50914; width: 0%; transition: width 0.2s; border-radius: 99px; }
+
+        /* status */
+        .status { font-size: 13px; margin-top: 8px; min-height: 18px; }
+        .status.ok  { color: #4caf50; }
+        .status.err { color: #e50914; }
+
+        /* divider */
+        .divider { display: flex; align-items: center; gap: 12px; color: #444; font-size: 13px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #222; }
+
+        /* video */
+        video { width: 100%; max-width: 900px; border-radius: 10px; background: #000; display: block; margin-top: 1rem; }
+        video.hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <input id="videoId" type="text" placeholder="Enter video ID e.g. 54834519-6609-425b-840b-103a47b8cb78" />
-    <button onclick="loadVideo()">Play</button>
-    <video id="player" controls></video>
+    <!-- Upload -->
+    <div class="card">
+        <h2>Upload video</h2>
+        <div class="drop-zone" id="dropZone">
+            <p>&#8679; Drop a video file here, or click to browse</p>
+            <p style="font-size:12px; color:#555; margin-top:4px;">mp4, mov, mkv, avi...</p>
+            <input type="file" id="fileInput" accept="video/*" style="display:none">
+        </div>
+        <p class="file-name" id="fileName"></p>
+        <div class="btn-row">
+            <button id="uploadBtn" disabled>Upload</button>
+            <button class="secondary" id="playUploadedBtn" style="display:none">&#9654; Play uploaded</button>
+        </div>
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="status" id="uploadStatus"></p>
+    </div>
+
+    <div class="divider" style="width:100%; max-width:900px;">or play by ID</div>
+
+    <!-- Play by ID -->
+    <div class="card">
+        <h2>Play video</h2>
+        <input type="text" id="videoId" placeholder="Enter video ID e.g. 54834519-6609-425b-840b-103a47b8cb78" />
+        <div class="btn-row">
+            <button onclick="loadVideoFromInput()">&#9654; Play</button>
+        </div>
+        <p class="status" id="playStatus"></p>
+    </div>
+
+    <video id="player" controls class="hidden"></video>
 
     <script>
         const BASE_URL = "http://localhost:4221";
+        let hlsInstance = null;
+        let selectedFile = null;
 
-        function loadVideo() {
-            const videoId = document.getElementById("videoId").value.trim();
-            const masterUrl = `${BASE_URL}/video/${videoId}`;
+        //Drop zone
+        const dropZone     = document.getElementById("dropZone");
+        const fileInput    = document.getElementById("fileInput");
+        const fileNameEl   = document.getElementById("fileName");
+        const uploadBtn    = document.getElementById("uploadBtn");
+        const playUploadedBtn = document.getElementById("playUploadedBtn");
+        const progressBar  = document.getElementById("progressBar");
+        const progressFill = document.getElementById("progressFill");
+        const uploadStatus = document.getElementById("uploadStatus");
 
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        dropZone.addEventListener("dragover", e => {
+            e.preventDefault();
+            dropZone.classList.add("over");
+        });
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("over"));
+        dropZone.addEventListener("drop", e => {
+            e.preventDefault();
+            dropZone.classList.remove("over");
+            if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files[0]) setFile(fileInput.files[0]);
+        });
+
+        function setFile(f) {
+            selectedFile = f;
+            fileNameEl.textContent = f.name + " — " + (f.size / 1024 / 1024).toFixed(1) + " MB";
+            uploadBtn.disabled = false;
+            uploadStatus.textContent = "";
+            uploadStatus.className = "status";
+            playUploadedBtn.style.display = "none";
+        }
+
+        // Upload 
+        uploadBtn.addEventListener("click", () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            progressBar.style.display = "block";
+            progressFill.style.width = "0%";
+            uploadStatus.textContent = "Uploading…";
+            uploadStatus.className = "status";
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", BASE_URL + "/video/upload");
+
+            xhr.upload.addEventListener("progress", e => {
+                if (e.lengthComputable) {
+                    progressFill.style.width = Math.round(e.loaded / e.total * 100) + "%";
+                }
+            });
+
+            xhr.addEventListener("load", () => {
+                uploadBtn.disabled = false;
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    if (xhr.status === 200) {
+                        const videoId = (res.data?.name ?? "").replace(".mp4", "");
+                        uploadStatus.textContent = "✓ Uploaded — ID: " + videoId;
+                        uploadStatus.className = "status ok";
+                        document.getElementById("videoId").value = videoId;
+                        playUploadedBtn.style.display = "inline-block";
+                        playUploadedBtn.onclick = () => loadVideo(videoId);
+                    } else {
+                        uploadStatus.textContent = res.message ?? "Upload failed";
+                        uploadStatus.className = "status err";
+                    }
+                } catch {
+                    uploadStatus.textContent = "Unexpected server response";
+                    uploadStatus.className = "status err";
+                }
+            });
+
+            xhr.addEventListener("error", () => {
+                uploadBtn.disabled = false;
+                uploadStatus.textContent = "Network error — is the server running?";
+                uploadStatus.className = "status err";
+            });
+
+            xhr.send(selectedFile);
+        });
+
+        // Playback
+        function loadVideoFromInput() {
+            const id = document.getElementById("videoId").value.trim();
+            const statusEl = document.getElementById("playStatus");
+            if (!id) {
+                statusEl.textContent = "Enter a video ID first";
+                statusEl.className = "status err";
+                return;
+            }
+            statusEl.textContent = "";
+            loadVideo(id);
+        }
+
+        function loadVideo(videoId) {
+            const masterUrl = BASE_URL + "/video/" + videoId;
             const video = document.getElementById("player");
+            video.classList.remove("hidden");
+
+            if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
             if (Hls.isSupported()) {
-                const hls = new Hls();
-                hls.loadSource(masterUrl);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-                hls.on(Hls.Events.ERROR, (event, data) => console.error("HLS error", data));
+                hlsInstance = new Hls();
+                hlsInstance.loadSource(masterUrl);
+                hlsInstance.attachMedia(video);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) console.error("HLS fatal error", data);
+                });
             } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                // Safari native HLS support
                 video.src = masterUrl;
                 video.play();
             } else {
