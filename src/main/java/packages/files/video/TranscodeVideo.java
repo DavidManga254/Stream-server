@@ -37,30 +37,31 @@ public class TranscodeVideo {
         }
     }
 
-    public void transcode() throws IOException{
+    public void transcode() throws IOException {
+        String baseUrl = System.getenv("BASE_URL");
         Path destination = java.nio.file.Paths.get(outputPath);
         Files.createDirectories(destination);
 
         String inputFile = Paths.VIDEO_STORAGE + "/" + videoId + ".mp4";
 
-        String scale;
+        String scale = switch(resolution) {
+            case RESOLUTION_720P -> VideoScale.RESOLUTION_720P;
+            case RESOLUTION_480P -> VideoScale.RESOLUTION_480P;
+            case RESOLUTION_360  -> VideoScale.RESOLUTION_360P;
+            default              -> VideoScale.RESOLUTION_720P;
+        };
 
-        switch(resolution) {
-            case RESOLUTION_720P:
-                scale = VideoScale.RESOLUTION_720P;
-                break;
-            case RESOLUTION_480P:
-                scale = VideoScale.RESOLUTION_480P;
-                break;
-            case RESOLUTION_360:
-                scale = VideoScale.RESOLUTION_360P;
-                break;
-            default:
-                scale = VideoScale.RESOLUTION_720P;
-        }
+        String resolutionLabel = switch(resolution) {
+            case RESOLUTION_720P -> "720";
+            case RESOLUTION_480P -> "480";
+            case RESOLUTION_360  -> "360";
+            default              -> "720";
+        };
 
         String segmentFilename = outputPath + "/%03d.ts";
-        String playlistFile = outputPath + "/playlist.m3u8";
+        String playlistFile    = outputPath + "/playlist.m3u8";
+
+        String hlsBaseUrl = baseUrl + "/streams/watch/" + videoId + "/" + resolutionLabel + "/";
 
         ProcessBuilder pb = new ProcessBuilder(
             "ffmpeg",
@@ -70,6 +71,7 @@ public class TranscodeVideo {
             "-c:v", "libx264",
             "-hls_time", "10",
             "-hls_playlist_type", "vod",
+            "-hls_base_url", hlsBaseUrl,  
             "-hls_segment_filename", segmentFilename,
             playlistFile
         );
@@ -78,7 +80,7 @@ public class TranscodeVideo {
         Process process = pb.start();
 
         try {
-            process.waitFor(); 
+            process.waitFor();
         } catch (InterruptedException e) {
             e.printStackTrace();
             throw new IOException("Failed to complete transcoding");
