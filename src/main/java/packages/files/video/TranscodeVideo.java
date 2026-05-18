@@ -71,6 +71,7 @@ public class TranscodeVideo {
             "-c:v", "libx264",
             "-hls_time", "10",
             "-hls_playlist_type", "vod",
+            "-hls_flags", "independent_segments",
             "-hls_base_url", hlsBaseUrl,  
             "-hls_segment_filename", segmentFilename,
             playlistFile

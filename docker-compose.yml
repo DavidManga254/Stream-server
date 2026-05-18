@@ -6,6 +6,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       DB_PORT: ${DB_PORT}
+      BASE_URL: ${BASE_URL}
     ports:
       - "${APP_PORT}:4221"
     volumes:

@@ -57,9 +57,8 @@ public class TranscodeWorkflow {
             videoId,
             List.of(
                     VideoResolution.RESOLUTION_360,
-                    VideoResolution.RESOLUTION_480P
-                    // TODO
-                    // VideoResolution.RESOLUTION_720P
+                    VideoResolution.RESOLUTION_480P,
+                    VideoResolution.RESOLUTION_720P
             )
         );
 
@@ -139,6 +138,8 @@ public class TranscodeWorkflow {
     private static final void upSertMasterPlayList(String videoId){
         List<TranscodeJobEntity.TranscodeJobEntityInfo> completedJobs = TranscodeJobRepository.getJobsByVideoIdAndStatus(videoId,TranscodeJobStatus.COMPLETE);
 
+        String baseUrl = System.getenv("BASE_URL");
+        
         if (completedJobs.isEmpty()) return;
 
         List<Variant> variants = completedJobs.stream()
@@ -146,7 +147,7 @@ public class TranscodeWorkflow {
                 VideoResolution res = job.resolution();
 
                 return new Variant(
-                        res.getFolder() + "/playlist.m3u8",
+                        baseUrl + "/streams/" + videoId + "/" + res.getFolder() + "/playlist.m3u8",
                         res.getBitrate(),
                         res.getHlsResolution()
                 );

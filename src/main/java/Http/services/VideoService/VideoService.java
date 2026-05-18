@@ -53,6 +53,9 @@ public class VideoService {
             System.out.println("error reading video from request");
 
             e.printStackTrace();
+
+            new ResponseWriter<HashMap<String,String>>(exchange,HttpStatus.INTERNAL_SERVER_ERROR,"No video file in request",null);
+
         }
     }
 
@@ -64,7 +67,7 @@ public class VideoService {
 
         VideoResolution resolution = this.mapVideoResolution(quality);
 
-        if(videoId == null || quality == null){
+        if(videoId == null || resolution == null){
             new ResponseWriter<>(exchange, HttpStatus.INTERNAL_SERVER_ERROR, "Invalid id or quality", null);
         }
 
@@ -107,6 +110,9 @@ public class VideoService {
             case "360" -> VideoResolution.RESOLUTION_360;
             case "480" -> VideoResolution.RESOLUTION_480P;
             case "720" -> VideoResolution.RESOLUTION_720P;
+            case "360p" -> VideoResolution.RESOLUTION_360;
+            case "480p" -> VideoResolution.RESOLUTION_480P;
+            case "720p" -> VideoResolution.RESOLUTION_720P;
             default -> null;
         };
 

@@ -26,15 +26,20 @@ public class VideoStoreManager {
     }
 
     public void saveFile() throws IOException {
-        
         Files.createDirectories(destination.getParent());
 
         try (OutputStream out = Files.newOutputStream(destination)) {
             byte[] buffer = new byte[8192];
             int bytesRead;
-            while ((bytesRead = videoStream.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
+
+            bytesRead = videoStream.read(buffer);
+            if (bytesRead == -1) {
+                throw new IOException("Empty stream, no file was provided");
             }
+
+            do {
+                out.write(buffer, 0, bytesRead);
+            } while ((bytesRead = videoStream.read(buffer)) != -1);
         }
     }
 
@@ -45,6 +50,7 @@ public class VideoStoreManager {
     }
 
     public static void serveQualityPlaylist(HttpExchange exchange, String videoId, VideoResolution resolution){
+
         Path playListFile = java.nio.file.Paths.get(Paths.getQualityPlaylist(videoId, resolution));
 
 
@@ -148,7 +154,6 @@ public class VideoStoreManager {
             Headers headers = exchange.getResponseHeaders();
             headers.set("Content-Type", "application/vnd.apple.mpegurl");
             headers.set("Cache-Control", "no-cache");
-            headers.set("Access-Control-Allow-Origin", "*");
 
             exchange.sendResponseHeaders(HttpStatus.OK.code, fileSize);
 

@@ -1,5 +1,6 @@
 package packages.Http;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
@@ -22,6 +23,21 @@ public class RequestRouter {
     }
 
     private void resolve(){
+
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Range");
+
+        if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+            try {
+                exchange.sendResponseHeaders(204, -1); 
+                exchange.getResponseBody().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return; 
+        }
+        
         //exchange.getRequestMethod tells the request method :: GET/POST/PUT/UPDATE etc
         String requestType = this.exchange.getRequestMethod();
         
